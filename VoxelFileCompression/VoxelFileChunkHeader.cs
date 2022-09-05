@@ -17,6 +17,12 @@ namespace VoxelFileCompression {
       header.BytesChildren = br.ReadInt32();
       return header;
     }
+
+    internal void Write(BinaryWriter bw) {
+      bw.Write(Identifier.ToCharArray());
+      bw.Write(BytesChunk);
+      bw.Write(BytesChildren);
+    }
   }
 
 }

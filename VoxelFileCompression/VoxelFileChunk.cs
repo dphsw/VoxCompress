@@ -40,6 +40,11 @@ namespace VoxelFileCompression {
       return count;
     }
 
+    internal void Write(BinaryWriter bw) {
+      Header.Write(bw);
+      bw.Write(ChunkData);
+      foreach (VoxelFileChunk c in Children) c.Write(bw);
+    }
   }
 
 }

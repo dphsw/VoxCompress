@@ -12,6 +12,9 @@ namespace VoxelFileCompression {
 
     public int FileSize {
       get {
+        // 4 bytes for 'VOX ' format indicator,
+        // 4 bytes for 32 bit int version indicator,
+        // then however much is in the main chunk.
         return 8 + mainChunk.ChunkSize;
       }
     }
@@ -47,6 +50,18 @@ namespace VoxelFileCompression {
 
     public int GetNumChunks() {
       return mainChunk.GetNumChunksIncChildren();
+    }
+
+    public void Save(Stream stream) {
+
+      if (stream == null) return;
+
+      using(BinaryWriter bw = new BinaryWriter(stream)) {
+        bw.Write((CompressedWhenLoaded ? "VOZ " : "VOX ").ToCharArray());
+        bw.Write(VersionIndicator);
+        mainChunk.Write(bw);
+      }
+
     }
 
   }

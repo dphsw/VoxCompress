@@ -26,5 +26,31 @@ namespace VoxelFileCompressionTests {
       }
     }
 
+    [Fact]
+    public void CanSaveAndLoadTestFile() {
+      VoxelFile voxelFile;
+      using (FileStream fs = new FileStream(TestFilename, FileMode.Open)) {
+        voxelFile = VoxelFile.Load(fs);
+      }
+
+      VoxelFile newVoxelFile = SaveThenLoad(voxelFile);
+
+      Assert.True(newVoxelFile.CompressedWhenLoaded == voxelFile.CompressedWhenLoaded);
+      Assert.True(newVoxelFile.FileSize == voxelFile.FileSize);
+      Assert.True(newVoxelFile.VersionIndicator == newVoxelFile.VersionIndicator);
+      Assert.True(newVoxelFile.GetNumChunks() == newVoxelFile.GetNumChunks());
+
+    }
+
+    private VoxelFile SaveThenLoad(VoxelFile voxelFile) {
+      int fileSize = voxelFile.FileSize;
+      byte[] buffer = new byte[fileSize];
+      using (MemoryStream ms = new MemoryStream(buffer)) voxelFile.Save(ms);
+
+      VoxelFile newFile;
+      using (MemoryStream ms = new MemoryStream(buffer)) newFile = VoxelFile.Load(ms);
+      return newFile;
+    }
+
   }
 }
