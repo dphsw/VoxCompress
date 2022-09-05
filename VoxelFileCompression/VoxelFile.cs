@@ -8,6 +8,14 @@ namespace VoxelFileCompression {
     public bool CompressedWhenLoaded { get; private set; }
     public int VersionIndicator { get; private set; }
 
+    VoxelFileChunk mainChunk { get; set; }
+
+    public int FileSize {
+      get {
+        return 8 + mainChunk.ChunkSize;
+      }
+    }
+
     public static VoxelFile Load(Stream stream) {
 
       if (stream == null) return null;
@@ -18,8 +26,7 @@ namespace VoxelFileCompression {
 
         voxelFile.ReadFirstFourChars(br);
         voxelFile.ReadVersionIndicator(br);
-
-
+        voxelFile.mainChunk = VoxelFileChunk.Read(br);
 
       }
 
@@ -36,6 +43,10 @@ namespace VoxelFileCompression {
 
     void ReadVersionIndicator(BinaryReader br) {
       VersionIndicator = br.ReadInt32();
+    }
+
+    public int GetNumChunks() {
+      return mainChunk.GetNumChunksIncChildren();
     }
 
   }

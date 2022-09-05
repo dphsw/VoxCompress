@@ -21,6 +21,8 @@ namespace VoxelFileCompressionTests {
         VoxelFile voxelFile = VoxelFile.Load(fs);
         Assert.False(voxelFile.CompressedWhenLoaded);
         Assert.True(voxelFile.VersionIndicator > 0);
+        Assert.True(voxelFile.FileSize >= 20);
+        Assert.True(voxelFile.GetNumChunks() > 1);
       }
     }
 
