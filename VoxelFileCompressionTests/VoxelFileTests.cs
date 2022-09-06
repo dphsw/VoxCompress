@@ -7,7 +7,7 @@ using VoxelFileCompression;
 namespace VoxelFileCompressionTests {
   public class VoxelFileTests {
 
-    const string TestFilename = "..\\..\\..\\realistic_terrain.vox";
+    const string TestFilename = "..\\..\\..\\menger243.vox";
 
     [Fact]
     public void TestFileExists() {
@@ -17,29 +17,43 @@ namespace VoxelFileCompressionTests {
 
     [Fact]
     public void TestFileIsMagicaVoxelFile() {
-      using (FileStream fs = new FileStream(TestFilename, FileMode.Open)) {
-        VoxelFile voxelFile = VoxelFile.Load(fs);
-        Assert.False(voxelFile.CompressedWhenLoaded);
-        Assert.True(voxelFile.VersionIndicator > 0);
-        Assert.True(voxelFile.FileSize >= 20);
-        Assert.True(voxelFile.GetNumChunks() > 1);
-      }
+      VoxelFile voxelFile = GetTestVoxelFile();
+      Assert.False(voxelFile.IsCompressed);
+      Assert.True(voxelFile.VersionIndicator > 0);
+      Assert.True(voxelFile.FileSize >= 20);
+      Assert.True(voxelFile.GetNumChunks() > 1);
     }
 
     [Fact]
     public void CanSaveAndLoadTestFile() {
-      VoxelFile voxelFile;
-      using (FileStream fs = new FileStream(TestFilename, FileMode.Open)) {
-        voxelFile = VoxelFile.Load(fs);
-      }
+      VoxelFile voxelFile = GetTestVoxelFile();
 
       VoxelFile newVoxelFile = SaveThenLoad(voxelFile);
 
-      Assert.True(newVoxelFile.CompressedWhenLoaded == voxelFile.CompressedWhenLoaded);
+      Assert.True(newVoxelFile.IsCompressed == voxelFile.IsCompressed);
       Assert.True(newVoxelFile.FileSize == voxelFile.FileSize);
       Assert.True(newVoxelFile.VersionIndicator == newVoxelFile.VersionIndicator);
       Assert.True(newVoxelFile.GetNumChunks() == newVoxelFile.GetNumChunks());
 
+    }
+
+    [Fact]
+    public void CanCompressFile() {
+      VoxelFile voxelFile = GetTestVoxelFile();
+      VoxelFile compressed = voxelFile.MakeCopy(true);
+
+      Assert.False(voxelFile.IsCompressed);
+      Assert.True(compressed.IsCompressed);
+
+      // This is not strictly always true - it depends on using a
+      // test file with a reasonably sized voxel model in it.
+      Assert.True(compressed.FileSize < voxelFile.FileSize);
+    }
+
+    private VoxelFile GetTestVoxelFile() {
+      VoxelFile voxelFile;
+      using (FileStream fs = new FileStream(TestFilename, FileMode.Open)) voxelFile = VoxelFile.Load(fs);
+      return voxelFile;
     }
 
     private VoxelFile SaveThenLoad(VoxelFile voxelFile) {

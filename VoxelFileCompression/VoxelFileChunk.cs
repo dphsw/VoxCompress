@@ -7,8 +7,8 @@ namespace VoxelFileCompression {
 
   internal class VoxelFileChunk {
 
-    VoxelFileChunkHeader Header { get; set; }
-    byte[] ChunkData { get; set; }
+    protected VoxelFileChunkHeader Header { get; set; }
+    protected byte[] ChunkData { get; set; }
     List<VoxelFileChunk> Children { get; set; } = new List<VoxelFileChunk>();
 
     public int ChunkSize { get { return 12 + Header.BytesChunk + Header.BytesChildren; } }
@@ -35,7 +35,7 @@ namespace VoxelFileCompression {
     }
 
     public int GetNumChunksIncChildren() {
-      int count = 1;
+      int count = 1; // Start by counting this chunk - should return 1 if have no children
       foreach (VoxelFileChunk c in Children) count += c.GetNumChunksIncChildren();
       return count;
     }
@@ -45,6 +45,21 @@ namespace VoxelFileCompression {
       bw.Write(ChunkData);
       foreach (VoxelFileChunk c in Children) c.Write(bw);
     }
+
+    internal virtual VoxelFileChunk MakeCopy(bool compressed) {
+      VoxelFileChunk chunk = new VoxelFileChunk();
+
+      chunk.ChunkData = (byte[])ChunkData.Clone();
+      foreach (VoxelFileChunk c in Children) chunk.Children.Add(c.MakeCopy(compressed));
+
+      int childrenSize = 0;
+      foreach (VoxelFileChunk c in chunk.Children) childrenSize += c.ChunkSize;
+
+      chunk.Header = new VoxelFileChunkHeader(Header.Identifier, ChunkData.Length, childrenSize);
+
+      return chunk;
+    }
+
   }
 
 }

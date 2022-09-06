@@ -5,7 +5,7 @@ namespace VoxelFileCompression {
 
   public class VoxelFile {
 
-    public bool CompressedWhenLoaded { get; private set; }
+    public bool IsCompressed { get; private set; }
     public int VersionIndicator { get; private set; }
 
     VoxelFileChunk mainChunk { get; set; }
@@ -39,8 +39,8 @@ namespace VoxelFileCompression {
 
     void ReadFirstFourChars(BinaryReader br) {
       string fourChars = new string(br.ReadChars(4));
-      if (fourChars == "VOX ") CompressedWhenLoaded = false;
-      else if (fourChars == "VOZ ") CompressedWhenLoaded = false;
+      if (fourChars == "VOX ") IsCompressed = false;
+      else if (fourChars == "VOZ ") IsCompressed = false;
       else throw new Exception("File is not a MagicaVoxel file");
     }
 
@@ -57,11 +57,19 @@ namespace VoxelFileCompression {
       if (stream == null) return;
 
       using(BinaryWriter bw = new BinaryWriter(stream)) {
-        bw.Write((CompressedWhenLoaded ? "VOZ " : "VOX ").ToCharArray());
+        bw.Write((IsCompressed ? "VOZ " : "VOX ").ToCharArray());
         bw.Write(VersionIndicator);
         mainChunk.Write(bw);
       }
 
+    }
+
+    public VoxelFile MakeCopy(bool Compressed) {
+      VoxelFile copy = new VoxelFile();
+      copy.IsCompressed = Compressed;
+      copy.VersionIndicator = VersionIndicator;
+      copy.mainChunk = mainChunk.MakeCopy(Compressed);
+      return copy;
     }
 
   }
