@@ -9,6 +9,30 @@ namespace VoxelFileCompression {
 
     List<Voxel> Voxels = new List<Voxel>();
 
+    public VoxelFileChunkVoxels() { }
+
+    public VoxelFileChunkVoxels(List<Voxel> voxels) {
+      Voxels.AddRange(voxels);
+      int n = Voxels.Count;
+      Voxel v;
+
+      MemoryStream chunkStream = new MemoryStream();
+      using (var bw = new BinaryWriter(chunkStream)) {
+        bw.Write(n);
+
+        for (int i = 0; i < n; i++) {
+          v = Voxels[i];
+          bw.Write(v.x);
+          bw.Write(v.y);
+          bw.Write(v.z);
+          bw.Write(v.i);
+        }
+      }
+
+      ChunkData = chunkStream.ToArray();
+      Header = new VoxelFileChunkHeader("XYZI", ChunkData.Length, 0);
+    }
+
     protected override void ProcessData() {
       Voxels.Clear();
       byte bx, by, bz, bi;
@@ -18,8 +42,8 @@ namespace VoxelFileCompression {
 
         for(int i = 0; i < n; i++) {
           bx = br.ReadByte();
-          bz = br.ReadByte();
           by = br.ReadByte();
+          bz = br.ReadByte();
           bi = br.ReadByte();
           Voxels.Add(new Voxel(bx, by, bz, bi));
         }

@@ -30,11 +30,11 @@ namespace VoxelFileCompressionTests {
 
       VoxelFile newVoxelFile = SaveThenLoad(voxelFile);
 
-      Assert.True(newVoxelFile.IsCompressed == voxelFile.IsCompressed);
-      Assert.True(newVoxelFile.FileSize == voxelFile.FileSize);
-      Assert.True(newVoxelFile.VersionIndicator == newVoxelFile.VersionIndicator);
-      Assert.True(newVoxelFile.GetNumChunks() == newVoxelFile.GetNumChunks());
-
+      MemoryStream oldFile = new MemoryStream();
+      MemoryStream newFile = new MemoryStream();
+      voxelFile.Save(oldFile);
+      newVoxelFile.Save(newFile);
+      Assert.True(BitConverter.ToString(oldFile.ToArray()) == BitConverter.ToString(newFile.ToArray()));
     }
 
     [Fact]
@@ -44,10 +44,22 @@ namespace VoxelFileCompressionTests {
 
       Assert.False(voxelFile.IsCompressed);
       Assert.True(compressed.IsCompressed);
+      Assert.True(compressed.GetNumChunks() == voxelFile.GetNumChunks());
 
       // This is not strictly always true - it depends on using a
       // test file with a reasonably sized voxel model in it.
       Assert.True(compressed.FileSize < voxelFile.FileSize);
+    }
+
+    [Fact]
+    public void CanDecompressFile() {
+      VoxelFile voxelFile = GetTestVoxelFile();
+      VoxelFile compressed = voxelFile.MakeCopy(true);
+      VoxelFile decompressed = compressed.MakeCopy(false);
+
+      Assert.True(decompressed.FileSize == voxelFile.FileSize);
+      Assert.True(decompressed.IsCompressed == voxelFile.IsCompressed);
+      Assert.True(decompressed.GetNumChunks() == voxelFile.GetNumChunks());
     }
 
     private VoxelFile GetTestVoxelFile() {

@@ -4,10 +4,11 @@ using System.IO.Compression;
 
 namespace VoxelFileCompression {
   internal class VoxelFileChunkCompressedVoxels : VoxelFileChunk {
-    private List<Voxel> Voxels;
+    List<Voxel> Voxels = new List<Voxel>();
+
+    public VoxelFileChunkCompressedVoxels() { }
 
     public VoxelFileChunkCompressedVoxels(List<Voxel> voxels) {
-      Voxels = new List<Voxel>();
       Voxels.AddRange(voxels);
 
       MemoryStream compressedStream = new MemoryStream();
@@ -40,6 +41,37 @@ namespace VoxelFileCompression {
       }
 
       return data;
+
+    }
+
+    internal override VoxelFileChunk MakeCopy(bool compressed) {
+      if (compressed) return base.MakeCopy(true);
+      return new VoxelFileChunkVoxels(Voxels);
+    }
+
+    protected override void ProcessData() {
+      Voxels.Clear();
+
+      byte bx, by, bz, bi;
+
+      MemoryStream inflatedData = new MemoryStream();
+      using(var inflator = new DeflateStream(inflatedData, CompressionMode.Decompress))
+        using (var bw = new BinaryWriter(inflator))
+          bw.Write(ChunkData);
+
+      inflatedData.Position = 0;
+      int v,numVoxels;
+
+      using (BinaryReader br = new BinaryReader(inflatedData)) numVoxels = br.ReadInt32();
+
+      byte[] voxelData = inflatedData.ToArray();
+      for (v = 0; v < numVoxels; v++) {
+        bx = voxelData[0 * numVoxels + 4 + v];
+        by = voxelData[1 * numVoxels + 4 + v];
+        bz = voxelData[2 * numVoxels + 4 + v];
+        bi = voxelData[3 * numVoxels + 4 + v];
+        Voxels.Add(new Voxel(bx, by, bz, bi));
+      }
 
     }
 

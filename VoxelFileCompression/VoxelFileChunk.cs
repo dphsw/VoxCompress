@@ -18,6 +18,7 @@ namespace VoxelFileCompression {
       VoxelFileChunk chunk;
 
       if (header.Identifier == "XYZI") chunk = new VoxelFileChunkVoxels();
+      else if (header.Identifier == "PNGS") chunk = new VoxelFileChunkCompressedVoxels();
       else chunk = new VoxelFileChunk();
 
       chunk.Header = header;
