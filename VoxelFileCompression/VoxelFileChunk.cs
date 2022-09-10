@@ -14,12 +14,20 @@ namespace VoxelFileCompression {
     public int ChunkSize { get { return 12 + Header.BytesChunk + Header.BytesChildren; } }
 
     public static VoxelFileChunk Read(BinaryReader br) {
-      VoxelFileChunk chunk = new VoxelFileChunk();
-      chunk.Header = VoxelFileChunkHeader.Read(br);
+      VoxelFileChunkHeader header = VoxelFileChunkHeader.Read(br);
+      VoxelFileChunk chunk;
+
+      if (header.Identifier == "XYZI") chunk = new VoxelFileChunkVoxels();
+      else chunk = new VoxelFileChunk();
+
+      chunk.Header = header;
       chunk.ChunkData = br.ReadBytes(chunk.Header.BytesChunk);
+      chunk.ProcessData();
       chunk.ReadChildChunks(br, chunk.Header.BytesChildren);
       return chunk;
     }
+
+    protected virtual void ProcessData() { }
 
     void ReadChildChunks(BinaryReader br, int bytesToRead) {
       int bytesRead = 0;
